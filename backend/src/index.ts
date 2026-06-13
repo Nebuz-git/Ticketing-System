@@ -5,17 +5,18 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import cors from "cors";
 
-const app = express();
 
+const app = express();
 
 app.use(cors({
     credentials: true,
 }));
-
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 app.use(cookieParser());
 // app.use(bodyParser.json());
+
+const router = express.Router();
 
 const server = http.createServer(app);
 
