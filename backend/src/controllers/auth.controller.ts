@@ -46,9 +46,9 @@ export const login = async (req: Request , res: Response) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({messgae: "Email and Password Required"})
+            return res.status(400).json({message: "Email and Password Required"})
         }
-        // 2. find user
+        // 2. find user by email
         const user = await prisma.user.findUnique({
           where: { email },
          });
@@ -63,9 +63,14 @@ export const login = async (req: Request , res: Response) => {
           if(!isMatch){
             return res.status(401).json({ message: "Invalid credentials" });
           }
-
+          
+          if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET missing");
+          }
           const secret = process.env.JWT_SECRET!;
           const expiresIn = process.env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"];
+
+
           //create token
           const token = jwt.sign(
             {
@@ -87,6 +92,7 @@ export const login = async (req: Request , res: Response) => {
           });         
       
     } catch (error) {
-        
+      console.error("LOGIN ERROR:", error);
+      return res.status(500).json({ message: "Server error" });
     }
 }
