@@ -6,6 +6,7 @@ import compression from "compression";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middlewares/auth.middleware";
+import ticketRoutes from "./routes/ticket.routes";
 
 const PORT = process.env.PORT || 8080;
 
@@ -22,6 +23,7 @@ app.use(express.json());
 const router = express.Router();
 
 app.use("/api/auth", authRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 const server = http.createServer(app);
 
