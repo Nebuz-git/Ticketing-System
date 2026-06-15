@@ -7,6 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middlewares/auth.middleware";
 import ticketRoutes from "./routes/ticket.routes";
+import userRoutes from "./routes/user.routes";
 
 const PORT = process.env.PORT || 8080;
 
@@ -24,6 +25,7 @@ const router = express.Router();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/users", userRoutes);
 
 const server = http.createServer(app);
 
