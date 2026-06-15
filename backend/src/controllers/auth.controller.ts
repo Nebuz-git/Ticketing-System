@@ -5,10 +5,10 @@ import { prisma } from "../extensions/prisma"
 
 export const register = async (req: Request , res: Response) => {
     try {
-        const { email , password } = req.body
+      const { username, email, password, department } = req.body;
         // basic check
-        if(!email || !password){
-            return res.status(400).json({message: "email and password required"})
+        if(!email || !password || !username){
+            return res.status(400).json({message: "username, email and password are required"})
         }
         // check if the user exists
         const existingUser = await prisma.user.findUnique({
@@ -24,15 +24,21 @@ export const register = async (req: Request , res: Response) => {
         //create user
         const user = await prisma.user.create({
             data: {
-                email,
-                password: hashedPassowrd
+              username,
+              email,
+              password: hashedPassowrd,
+              department,
+              role: "employee",
             }
         })
 
         //return response 
         return res.status(201).json({
             id: user.id,
-            email: user.email
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            department: user.department
         })
 
 
@@ -76,6 +82,7 @@ export const login = async (req: Request , res: Response) => {
             {
               userId: user.id,
               email: user.email,
+              role: user.role,
             },
             secret,
             {
@@ -87,7 +94,10 @@ export const login = async (req: Request , res: Response) => {
           token,
             user: {
               id: user.id,
+              username: user.username,
               email: user.email,
+              role: user.role,
+              department: user.department,
           },
           });         
       

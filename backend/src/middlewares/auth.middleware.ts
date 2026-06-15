@@ -21,6 +21,7 @@ export const authMiddleware = (req: Request , res: Response , next: NextFunction
           const decoded = jwt.verify(token,process.env.JWT_SECRET as string) as {
             userId: string;
             email: string;
+            role: "employee" | "support" | "admin";
          }
 
          //attach user to request ( mapping)

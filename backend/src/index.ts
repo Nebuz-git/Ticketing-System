@@ -7,6 +7,8 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middlewares/auth.middleware";
 
+const PORT = process.env.PORT || 8080;
+
 const app = express();
 
 app.use(cors({
@@ -19,7 +21,7 @@ app.use(express.json());
 // app.use(bodyParser.json());  
 const router = express.Router();
 
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 const server = http.createServer(app);
 
@@ -34,6 +36,6 @@ app.get("/profile", authMiddleware, (req, res) => {
     });
 });
 
-server.listen(8080, () => {
+server.listen(PORT, () => {
     console.log("server is running on http://localhost:8080/");
 }) 
