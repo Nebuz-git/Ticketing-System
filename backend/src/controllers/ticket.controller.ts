@@ -204,3 +204,45 @@ export const getTicketById = async (req: Request<{ id: string }>, res: Response)
     }
   };
 
+  export const getDashboardStats = async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+  
+      const where = user.role === "employee" ? { createdBy: user.userId } : {};
+  
+      const [total, open, inProgress, resolved, closed, recentTickets] =
+        await Promise.all([
+          prisma.ticket.count({ where }),
+          prisma.ticket.count({ where: { ...where, status: "open" } }),
+          prisma.ticket.count({ where: { ...where, status: "in_progress" } }),
+          prisma.ticket.count({ where: { ...where, status: "resolved" } }),
+          prisma.ticket.count({ where: { ...where, status: "closed" } }),
+          prisma.ticket.findMany({
+            where,
+            take: 5,
+            orderBy: { createdAt: "desc" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  department: true,
+                },
+              },
+            },
+          }),
+        ]);
+  
+      return res.json({
+        total,
+        open,
+        in_progress: inProgress,
+        resolved,
+        closed,
+        recentTickets,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Server error" });
+    }
+  };

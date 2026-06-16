@@ -7,6 +7,7 @@ import Dashboard from "../pages/Dashboard";
 import Tickets from "../pages/Tickets";
 import Users from "../pages/Users";
 import AuditLogs from "../pages/AuditLogs";
+import TicketDetail from "../pages/TicketDetail";
 
 export default function AppRoutes() {
   return (
@@ -14,7 +15,6 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
       <Route
         element={
           <ProtectedRoute>
@@ -26,6 +26,8 @@ export default function AppRoutes() {
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/users" element={<Users />} />
         <Route path="/audit-logs" element={<AuditLogs />} />
+        <Route path="/tickets/:id" element={<TicketDetail />} />
+        
       </Route>
     </Routes>
   );
