@@ -1,22 +1,32 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login";
 import Register from "../pages/register";
 import ProtectedRoute from "./ProtectedRoute";
-import  Home  from "../pages/Home"
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import Dashboard from "../pages/Dashboard";
+import Tickets from "../pages/Tickets";
+import Users from "../pages/Users";
+import AuditLogs from "../pages/AuditLogs";
 
 export default function AppRoutes() {
   return (
     <Routes>
-        {/* <Route path="/" element={<Navigator to="/login" />} /> */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Home />
-        </ProtectedRoute>
+      <Route
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
         }
-        />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/audit-logs" element={<AuditLogs />} />
+      </Route>
     </Routes>
   );
 }

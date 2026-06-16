@@ -5,14 +5,18 @@ import './index.css'
 import App from './App.tsx'
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
+// import ThemeToggle from "./components/ThemeToggle";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-      <Toaster richColors position="bottom-right" />
+      <ThemeProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+        <Toaster richColors position="bottom-right" />
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 )
