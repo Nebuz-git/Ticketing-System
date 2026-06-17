@@ -38,5 +38,14 @@ app.get("/profile", authMiddleware, (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log("server is running on http://localhost:8080/");
+  console.log("┌─────────────────────────────────────────┐");
+  console.log("│           TicketSys is running           │");
+  console.log("├─────────────────────────────────────────┤");
+  console.log("│  Frontend:  http://localhost:3000        │");
+  console.log("│  Backend:   http://localhost:8080        │");
+  console.log("├─────────────────────────────────────────┤");
+  console.log("│  admin@ticketsys.com    / Demo123!       │");
+  console.log("│  support@ticketsys.com  / Demo123!       │");
+  console.log("│  employee@ticketsys.com / Demo123!       │");
+  console.log("└─────────────────────────────────────────┘");
 });

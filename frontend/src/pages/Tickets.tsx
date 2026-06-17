@@ -50,7 +50,7 @@
     const [editTicket, setEditTicket] = useState<Ticket | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Ticket | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [totalPages,] = useState(1);
     
     const navigate = useNavigate();
     const token = localStorage.getItem("token");

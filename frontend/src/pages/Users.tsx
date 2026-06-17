@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Search, UserPlus, Shield, User, Building2 } from "lucide-react";
+import { Search, UserPlus, Building2 } from "lucide-react";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const API_URL = import.meta.env.VITE_API_URL;
