@@ -35,12 +35,13 @@ enum Status {
 enum AuditAction {
   TICKET_CREATED
   TICKET_UPDATED
-  TICKET_RESOLVED
   TICKET_DELETED
+  TICKET_RESOLVED
   PRIVILEGES_CHANGED
   SUPPORT_ACCOUNT_CREATED
+  SUPPORT_CREATED
+  ROLE_UPDATED
 }
-
 
 model User {
   id         String   @id @default(uuid())

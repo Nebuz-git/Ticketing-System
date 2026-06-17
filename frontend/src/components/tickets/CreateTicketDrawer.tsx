@@ -156,6 +156,22 @@ function DrawerForm({ onClose, onSuccess, editTicket }: Omit<Props, "open">) {
 }
 
 export default function CreateTicketDrawer({ open, onClose, onSuccess, editTicket }: Props) {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [open, onClose]);
+
   return (
     <>
       {open && (

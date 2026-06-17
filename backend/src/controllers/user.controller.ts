@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import { AuditAction } from "@prisma/client";
 import { prisma } from "../extensions/prisma";
+import { createAuditLog } from "../utils/createAuditLog";
 
 // GET /api/users
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -27,6 +29,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
 export const createSupportUser = async (req: Request, res: Response) => {
   try {
     const { username, email, password, department } = req.body;
+    const authUser = (req as any).user;
+    
 
     if (!username || !email || !password) {
       return res.status(400).json({ message: "username, email, and password are required" });
@@ -56,6 +60,12 @@ export const createSupportUser = async (req: Request, res: Response) => {
       },
     });
 
+    await createAuditLog({
+      userId: authUser.userId, // admin who performed action
+      action: AuditAction.SUPPORT_ACCOUNT_CREATED,
+      description: `Created support account for ${user.email}`,
+    });
+
     return res.status(201).json(user);
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
@@ -67,6 +77,7 @@ export const updateUserRole = async (req: Request<{ id: string }>, res: Response
   try {
     const { id } = req.params;
     const { role } = req.body;
+    const authUser = (req as any).user;
 
     const validRoles = ["employee", "support", "admin"];
     if (!role || !validRoles.includes(role)) {
@@ -88,6 +99,12 @@ export const updateUserRole = async (req: Request<{ id: string }>, res: Response
         role: true,
         department: true,
       },
+    });
+
+    await createAuditLog({
+      userId: authUser.userId,
+      action: AuditAction.ROLE_UPDATED,
+      description: `Changed role of ${user.email} to ${role}`,
     });
 
     return res.json(updated);

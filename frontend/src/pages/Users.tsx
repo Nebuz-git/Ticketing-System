@@ -34,6 +34,22 @@ export default function Users() {
   const [creating, setCreating] = useState(false);
   const token = localStorage.getItem("token");
 
+  useEffect(() => {
+    if (!createOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setCreateOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [createOpen]);
+
   const fetchUsers = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/users`, {
@@ -216,6 +232,7 @@ export default function Users() {
       {/* Create support modal */}
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
+          
           <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setCreateOpen(false)} />
           <div className="relative w-[440px] max-w-[90vw] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-6 z-10">
             <div className="flex items-center gap-3 mb-5">

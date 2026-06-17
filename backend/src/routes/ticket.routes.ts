@@ -16,7 +16,7 @@ const router = express.Router();
 router.get("/", authMiddleware, requireRole("employee", "support", "admin"), getTickets);
 router.get("/stats/dashboard", authMiddleware, requireRole("employee", "support", "admin"), getDashboardStats);
 router.get("/:id", authMiddleware, requireRole("employee", "support", "admin"), getTicketById);
-router.post("/", authMiddleware, requireRole("employee"), createTicket);
+router.post("/", authMiddleware, requireRole("employee" , "admin"), createTicket);
 router.patch("/:id", authMiddleware, requireRole("employee", "support", "admin"), updateTicket);
 router.delete("/:id", authMiddleware, requireRole("employee", "support", "admin"), deleteTicket);
 export default router;

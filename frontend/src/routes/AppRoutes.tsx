@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login";
 import Register from "../pages/register";
 import ProtectedRoute from "./ProtectedRoute";
+import RoleRoute from "./RoleRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
 import Tickets from "../pages/Tickets";
@@ -24,10 +25,23 @@ export default function AppRoutes() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tickets" element={<Tickets />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/audit-logs" element={<AuditLogs />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
-        
+        <Route
+          path="/users"
+          element={
+            <RoleRoute roles={["admin"]}>
+              <Users />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/audit-logs"
+          element={
+            <RoleRoute roles={["admin"]}>
+              <AuditLogs />
+            </RoleRoute>
+          }
+        />
       </Route>
     </Routes>
   );
