@@ -119,24 +119,21 @@ export const getTicketById = async (req: Request<{ id: string }>, res: Response)
   };
 
   // CREATE TICKET
-  export const createTicket = async (req: Request<{ id: string }>, res: Response) => {
-    try {
-      const { title, description, priority} = req.body;
-      const user = (req as any).user;
-  
-      if (!title || !description) {
-        return res.status(400).json({
-          message: "title and description are required",
-        });
-      }
+export const createTicket = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { title, description, priority } = req.body;
+    const user = (req as any).user;
 
-      if (priority && !validPriorities.includes(priority)) {
-        return res.status(400).json({
-          message: "priority must be low, medium, or high",
-        });
-      }
-  
-      const ticket = await prisma.ticket.create({
+    if (!title || !description) {
+      return res.status(400).json({ message: "title and description are required" });
+    }
+
+    if (priority && !validPriorities.includes(priority)) {
+      return res.status(400).json({ message: "priority must be low, medium, or high" });
+    }
+
+    const ticket = await prisma.$transaction(async (tx) => {
+      const newTicket = await tx.ticket.create({
         data: {
           title,
           description,
@@ -145,76 +142,74 @@ export const getTicketById = async (req: Request<{ id: string }>, res: Response)
         },
       });
 
-      await createAuditLog({
-        userId: user.userId,
-        ticketId: ticket.id,
-        action: "TICKET_CREATED",
-        description: `Created ticket "${title}" with priority ${priority}`,
+      await tx.auditLog.create({
+        data: {
+          userId: user.userId,
+          ticketId: newTicket.id,
+          action: "TICKET_CREATED",
+          description: `Created ticket "${title}" with priority ${newTicket.priority}`,
+        },
       });
-  
-      return res.status(201).json(ticket);
-    } catch (error) {
-      return res.status(500).json({ message: "Server error" });
-    }
-  };
+
+      return newTicket;
+    });
+
+    return res.status(201).json(ticket);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 // UPDATE TICKET
-  export const updateTicket = async (req: Request<{ id: string }>, res: Response) => {
+export const updateTicket = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { title, description, priority, status } = req.body;
 
     if (priority && !validPriorities.includes(priority)) {
-        return res.status(400).json({
-          message: "priority must be low, medium, or high",
-        });
-      }
-      
-      if (status && !validStatuses.includes(status)) {
-        return res.status(400).json({
-          message: "status must be open, in_progress, resolved, or closed",
-        });
-      }
+      return res.status(400).json({ message: "priority must be low, medium, or high" });
+    }
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ message: "status must be open, in_progress, resolved, or closed" });
+    }
 
     const user = (req as any).user;
 
-    const ticket = await prisma.ticket.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!ticket) {
+    const existingTicket = await prisma.ticket.findUnique({ where: { id: req.params.id } });
+    if (!existingTicket) {
       return res.status(404).json({ message: "Ticket not found" });
     }
-
-    if (user.role === "employee" && ticket.createdBy !== user.userId) {
+    if (user.role === "employee" && existingTicket.createdBy !== user.userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
     const changedFields = [
-      title !== undefined && title !== ticket.title ? "title" : null,
-      description !== undefined && description !== ticket.description ? "description" : null,
-      priority !== undefined && priority !== ticket.priority ? "priority" : null,
-      status !== undefined && status !== ticket.status ? "status" : null,
+      title !== undefined && title !== existingTicket.title ? "title" : null,
+      description !== undefined && description !== existingTicket.description ? "description" : null,
+      priority !== undefined && priority !== existingTicket.priority ? "priority" : null,
+      status !== undefined && status !== existingTicket.status ? "status" : null,
     ].filter((field): field is string => field !== null);
 
-    const updatedTicket = await prisma.ticket.update({
-      where: { id: req.params.id },
-      data: {
-        title,
-        description,
-        priority,
-        status,
-      },
+    const updatedTicket = await prisma.$transaction(async (tx) => {
+      const ticket = await tx.ticket.update({
+        where: { id: req.params.id },
+        data: { title, description, priority, status },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.userId,
+          ticketId: ticket.id,
+          action: "TICKET_UPDATED",
+          description:
+            changedFields.length > 0
+              ? `Updated ${changedFields.join(", ")} in "${ticket.title}"`
+              : `Updated ticket "${ticket.title}"`,
+        },
+      });
+
+      return ticket;
     });
 
-    await createAuditLog({
-      userId: user.userId,
-      ticketId: ticket.id,
-      action: "TICKET_UPDATED",
-      description:
-        changedFields.length > 0
-          ? `Updated ${changedFields.join(", ")} in "${updatedTicket.title}"`
-          : `Updated ticket "${updatedTicket.title}"`,
-    });
     return res.json(updatedTicket);
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
@@ -222,39 +217,36 @@ export const getTicketById = async (req: Request<{ id: string }>, res: Response)
 };
 
 // DELETE TICKET
-  export const deleteTicket = async (req: Request<{ id: string }>, res: Response) => {
-    try {
-      const user = (req as any).user;
-  
-      const ticket = await prisma.ticket.findUnique({
-        where: { id: req.params.id },
-      });
-  
-      if (!ticket) {
-        return res.status(404).json({ message: "Ticket not found" });
-      }
-  
-      if (user.role === "employee" && ticket.createdBy !== user.userId) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-  
-      await createAuditLog({
-        userId: user.userId,
-        ticketId: ticket.id,
-        action: "TICKET_DELETED",
-        description: `Deleted ticket "${ticket.title}" (ID: ${ticket.id})`,
-      });
+export const deleteTicket = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const user = (req as any).user;
 
-      await prisma.ticket.delete({
-        where: { id: req.params.id },
-      });
-
-  
-      return res.json({ message: "Ticket deleted successfully" });
-    } catch (error) {
-      return res.status(500).json({ message: "Server error" });
+    const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id } });
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
     }
-  };
+    if (user.role === "employee" && ticket.createdBy !== user.userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          userId: user.userId,
+          ticketId: ticket.id,
+          action: "TICKET_DELETED",
+          description: `Deleted ticket "${ticket.title}" (ID: ${ticket.id})`,
+        },
+      });
+
+      await tx.ticket.delete({ where: { id: req.params.id } });
+    });
+
+    return res.json({ message: "Ticket deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
   export const getDashboardStats = async (req: Request, res: Response) => {
     try {

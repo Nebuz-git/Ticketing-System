@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toast } from "sonner";
 import {
   Search,
@@ -12,8 +11,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
+import api from "@/lib/axios";
 interface AuditLog {
   id: string;
   action: string;
@@ -45,14 +43,13 @@ export default function AuditLogs() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 20;
-  const token = localStorage.getItem("token");
+
 
   const fetchLogs = async (currentPage = 1) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/api/audit-logs`, {
+      const res = await api.get(`/api/audit-logs`, {
         params: { page: currentPage, limit },
-        headers: { Authorization: `Bearer ${token}` },
       });
       setLogs(res.data.logs);
       setTotal(res.data.total);

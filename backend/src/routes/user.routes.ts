@@ -3,7 +3,6 @@ import { getAllUsers, createSupportUser, updateUserRole } from "../controllers/u
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { requireRole } from "../middlewares/role.middleware";
 import { getAuditLogs } from "../controllers/audit.controller";
-import { prisma } from "../extensions/prisma";
 
 const router = Router();
 

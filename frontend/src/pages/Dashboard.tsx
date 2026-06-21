@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
 import { Ticket, Clock, CheckCircle, XCircle, BarChart2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/axios";
 
 interface DashboardStats {
   total: number;
@@ -46,10 +45,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_URL}/api/tickets/stats/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get(`/api/tickets/stats/dashboard`)
         setStats(res.data);
       } catch (err: any) {
         toast.error(err?.response?.data?.message || "Failed to load dashboard");

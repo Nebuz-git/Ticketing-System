@@ -1,13 +1,11 @@
   import { useEffect, useState } from "react";
-  import axios from "axios";
   import { Plus, Search, MoreVertical, Pencil, Trash2, Eye } from "lucide-react";
   import { formatDistanceToNow } from "date-fns";
   import { toast } from "sonner";
   import CreateTicketDrawer from "../components/tickets/CreateTicketDrawer";
   import ConfirmModal from "../components/ui/ConfirmModal";
   import { useNavigate } from "react-router-dom";
-
-  const API_URL = import.meta.env.VITE_API_URL;
+  import api from "@/lib/axios";
 
   interface Ticket {
     id: string;
@@ -50,17 +48,27 @@
     const [editTicket, setEditTicket] = useState<Ticket | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Ticket | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages,] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     
     const navigate = useNavigate();
-    const token = localStorage.getItem("token");
+
 
     const fetchTickets = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/tickets`, {
-          headers: { Authorization: `Bearer ${token}` },
+        setLoading(true);
+        const res = await api.get("/api/tickets", {
+          params: {
+            page: currentPage,
+            limit: 10,
+            ...(statusFilter !== "all" && { status: statusFilter }),
+            ...(priorityFilter !== "all" && { priority: priorityFilter }),
+            ...(search && { search }),
+          },
         });
-        setTickets(res.data.tickets ?? res.data);
+        setTickets(res.data.tickets);
+        setTotalPages(res.data.pagination.totalPages);
+        setTotalCount(res.data.pagination.total);
       } catch {
         toast.error("Failed to load tickets");
       } finally {
@@ -70,7 +78,7 @@
 
     useEffect(() => {
       fetchTickets();
-    }, [currentPage]);
+    }, [currentPage, statusFilter, priorityFilter]);
 
     useEffect(() => {
       const handleClickOutside = () => setOpenMenu(null);
@@ -81,9 +89,7 @@
     const handleDelete = async () => {
       if (!deleteTarget) return;
       try {
-        await axios.delete(`${API_URL}/api/tickets/${deleteTarget.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.delete(`/api/tickets/${deleteTarget.id}`);
         toast.success("Ticket deleted");
         setDeleteTarget(null);
         fetchTickets();
@@ -92,13 +98,19 @@
       }
     };
 
-    const filtered = tickets.filter((t) => {
-      const matchSearch = t.title.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "all" || t.status === statusFilter;
-      const matchPriority = priorityFilter === "all" || t.priority === priorityFilter;
-      return matchSearch && matchStatus && matchPriority;
-    });
+    const filtered = tickets.filter((t) =>
+      t.title.toLowerCase().includes(search.toLowerCase())
+    );
 
+const handleStatusFilterChange = (value: string) => {
+  setStatusFilter(value);
+  setCurrentPage(1);
+};
+
+const handlePriorityFilterChange = (value: string) => {
+  setPriorityFilter(value);
+  setCurrentPage(1);
+};
     
 
     return (
@@ -109,7 +121,7 @@
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tickets</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {filtered.length} of {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
+              {filtered.length} of {totalCount} ticket{totalCount !== 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -135,7 +147,7 @@
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => handleStatusFilterChange(e.target.value)}
             className="h-9 px-3 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none focus:border-blue-500 transition cursor-pointer"
           >
             <option value="all">All Statuses</option>
@@ -146,7 +158,7 @@
           </select>
           <select
             value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
+            onChange={(e) => handlePriorityFilterChange(e.target.value)}
             className="h-9 px-3 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none focus:border-blue-500 transition cursor-pointer"
           >
             <option value="all">All Priorities</option>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -18,7 +17,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CreateTicketDrawer from "@/components/tickets/CreateTicketDrawer";
 
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/axios";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
@@ -56,13 +55,10 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const token = localStorage.getItem("token");
 
   const fetchTicket = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/tickets/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/api/tickets/${id}`)
       setTicket(res.data);
     } catch {
       toast.error("Failed to load ticket");
@@ -78,9 +74,7 @@ export default function TicketDetail() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/api/tickets/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/api/tickets/${id}`)
       toast.success("Ticket deleted");
       navigate("/tickets");
     } catch {

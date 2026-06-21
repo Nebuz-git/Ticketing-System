@@ -4,12 +4,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
-
+import api from "@/lib/axios";
 import { useAuth } from "../../context/AuthContext";
 
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 const schema = z.object({
   title: z.string().min(3, "Min. 3 characters"),
@@ -29,7 +26,6 @@ interface Props {
 
 function DrawerForm({ onClose, onSuccess, editTicket }: Omit<Props, "open">) {
   const isEdit = !!editTicket;
-  const token = localStorage.getItem("token");
 
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -44,9 +40,7 @@ function DrawerForm({ onClose, onSuccess, editTicket }: Omit<Props, "open">) {
     if (editTicket) {      
       const fetchFull = async () => {
         try {
-          const res = await axios.get(`${API_URL}/api/tickets/${editTicket.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await api.get(`api/tickets/${editTicket.id}`)
           reset({
             title: res.data.title,
             description: res.data.description,
@@ -65,14 +59,10 @@ function DrawerForm({ onClose, onSuccess, editTicket }: Omit<Props, "open">) {
     console.log("Submitting:", data);
     try {
       if (isEdit) {
-        await axios.patch(`${API_URL}/api/tickets/${editTicket.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.patch(`/api/tickets/${editTicket.id}`, data);
         toast.success("Ticket updated");
       } else {
-        await axios.post(`${API_URL}/api/tickets`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.post("/api/tickets", data);
         toast.success("Ticket created");
       }
       onSuccess();

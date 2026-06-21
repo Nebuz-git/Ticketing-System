@@ -23,6 +23,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
+        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />

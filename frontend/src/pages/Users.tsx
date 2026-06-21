@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toast } from "sonner";
 import { Search, UserPlus, Building2 } from "lucide-react";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "@/lib/axios";
 
 interface UserType {
   id: string;
@@ -32,7 +30,7 @@ export default function Users() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ username: "", email: "", password: "", department: "" });
   const [creating, setCreating] = useState(false);
-  const token = localStorage.getItem("token");
+
 
   useEffect(() => {
     if (!createOpen) return;
@@ -52,9 +50,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/api/users`)
       setUsers(res.data);
     } catch {
       toast.error("Failed to load users");
@@ -70,10 +66,9 @@ export default function Users() {
   const handleRoleChange = async () => {
     if (!roleTarget) return;
     try {
-      await axios.patch(
-        `${API_URL}/api/users/${roleTarget.user.id}/role`,
+      await api.patch(
+        `/api/users/${roleTarget.user.id}/role`,
         { role: roleTarget.newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Role updated to ${roleTarget.newRole}`);
       setRoleTarget(null);
@@ -90,9 +85,7 @@ export default function Users() {
     }
     setCreating(true);
     try {
-      await axios.post(`${API_URL}/api/users/support`, createForm, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`/api/users/support`, createForm)
       toast.success("Support account created");
       setCreateOpen(false);
       setCreateForm({ username: "", email: "", password: "", department: "" });

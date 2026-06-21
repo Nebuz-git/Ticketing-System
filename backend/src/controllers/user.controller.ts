@@ -30,7 +30,6 @@ export const createSupportUser = async (req: Request, res: Response) => {
   try {
     const { username, email, password, department } = req.body;
     const authUser = (req as any).user;
-    
 
     if (!username || !email || !password) {
       return res.status(400).json({ message: "username, email, and password are required" });
@@ -43,27 +42,33 @@ export const createSupportUser = async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashed,
-        role: "support",
-        department: department ?? null,
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        department: true,
-      },
-    });
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          username,
+          email,
+          password: hashed,
+          role: "support",
+          department: department ?? null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          department: true,
+        },
+      });
 
-    await createAuditLog({
-      userId: authUser.userId, // admin who performed action
-      action: AuditAction.SUPPORT_ACCOUNT_CREATED,
-      description: `Created support account for ${user.email}`,
+      await tx.auditLog.create({
+        data: {
+          userId: authUser.userId, // admin who performed action
+          action: AuditAction.SUPPORT_CREATED,
+          description: `Created support account for ${newUser.email}`,
+        },
+      });
+
+      return newUser;
     });
 
     return res.status(201).json(user);
@@ -84,27 +89,33 @@ export const updateUserRole = async (req: Request<{ id: string }>, res: Response
       return res.status(400).json({ message: "role must be employee, support, or admin" });
     }
 
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) {
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: { role },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        department: true,
-      },
-    });
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: { role },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          department: true,
+        },
+      });
 
-    await createAuditLog({
-      userId: authUser.userId,
-      action: AuditAction.ROLE_UPDATED,
-      description: `Changed role of ${user.email} to ${role}`,
+      await tx.auditLog.create({
+        data: {
+          userId: authUser.userId,
+          action: AuditAction.ROLE_UPDATED,
+          description: `Changed role of ${existingUser.email} to ${role}`,
+        },
+      });
+
+      return updatedUser;
     });
 
     return res.json(updated);
